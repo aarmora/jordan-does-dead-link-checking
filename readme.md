@@ -1,6 +1,6 @@
 # Jordan Does Dead Link Checking
 
-Searches Craigslist by url (with proper filters) and then sends an email.
+Searches a specified domain name for any dead links that exist.
 
 ## Getting Started
 
