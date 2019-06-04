@@ -10,6 +10,8 @@ Update the domain that you want to search in the `src/index.ts` file.
 
 After that, you just need to run `npm start` and it'll scrape the categories and email the results to you.
 
+[Full Guide](https://javascriptwebscrapingguy.com/jordan-does-dead-link-checking/)
+
 ### Prerequisites
 
 Tested on Node v10.15.0 and NPM v6.4.1.
