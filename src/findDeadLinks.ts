@@ -22,7 +22,6 @@ export async function findDeadLinks(domain: string) {
         throw `Error requesting base domain - ${domain}, ${e.statusCode}`;
     }
     let links: ILinkObject[] = await getLinks(html, domain, domain);
-    console.log('links and bad links', links.length, links.filter(link => link.status && link.status > 399));
 
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
@@ -67,7 +66,6 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
 
     // Let's not get further links if we are on someone else's domain
     if (newDomain) {
-        // console.log('domain check', linkObject.link, domain, newDomain, domainCheck(linkObject.link, domain, newDomain));
         if (html && domainCheck(linkObject.link, domain, newDomain)) {
             links = await getLinks(html, domain, linkObject.link, false, links);
         }
