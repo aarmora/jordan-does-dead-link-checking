@@ -1,6 +1,6 @@
 import * as requestPromise from 'request-promise';
-import { spawn, Thread, Worker, Pool } from 'threads';
-import { ILinkObject, getLinks, checkLink } from './checkLink';
+import { spawn, Thread, Worker } from 'threads';
+import { ILinkObject, getLinks } from './checkLink';
 
 
 export async function findDeadLinks(domain: string) {
@@ -24,7 +24,7 @@ export async function findDeadLinks(domain: string) {
         if (!links[i].status) {
             const promises: any[] = [];
 
-            const amountOfThreads = 20;
+            const amountOfThreads = 10;
             for (let linkToCheckIndex = 0; linkToCheckIndex < amountOfThreads; linkToCheckIndex++) {
                 if (links[i + linkToCheckIndex]) {
                     promises.push(checkLink(links[i + linkToCheckIndex], domain));
@@ -56,8 +56,8 @@ export async function findDeadLinks(domain: string) {
         }
     }
 
-    console.log('links', links);
     console.log('links length', links.length);
+    console.log('links with no status', links.filter(link => link.status === null).length);
     console.log('bad links', links.filter(link => link.status && link.status > 399));
 
 }
