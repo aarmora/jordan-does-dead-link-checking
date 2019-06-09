@@ -65,11 +65,13 @@ export async function getLinks(html: any, domain: string, currentUrl: string, de
             // If we're doing a deep check, we'll check the same urls with just different query params
             linkToPush = deep ? linkToPush : linkToPush.split('?')[0];
             // console.log('adding new link', linkToPush, link)
-            links.push({
-                link: linkToPush,
-                status: null,
-                locationOfLink: currentUrl
-            });
+            if (links.filter(linkObject => linkObject.link === linkToPush).length < 1) {
+                links.push({
+                    link: linkToPush,
+                    status: null,
+                    locationOfLink: currentUrl
+                });
+            }
         }
     });
 

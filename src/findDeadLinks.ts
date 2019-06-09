@@ -24,18 +24,20 @@ export async function findDeadLinks(domain: string) {
         if (!links[i].status) {
             const promises: any[] = [];
 
-            promises.push(checkLink(links[i], domain));
-            // promises.push(checkLink(links[i + 1], domain));
-            // promises.push(checkLink(links[i + 2], domain));
-            // promises.push(checkLink(links[i + 3], domain));
-
+            const amountOfThreads = 20;
+            for (let linkToCheckIndex = 0; linkToCheckIndex < amountOfThreads; linkToCheckIndex++) {
+                if (links[i + linkToCheckIndex]) {
+                    promises.push(checkLink(links[i + linkToCheckIndex], domain));
+                }
+            }
 
             const checkLinkResponses = await Promise.all(promises);
 
             for (let index = 0; index < checkLinkResponses.length; index++) {
                 // Replace the link that doesn't have a status with the link that does
-                // TODO: Will this always be in the same order?
-                links[i + index] = checkLinkResponses[index].link;
+                // TODO: Will this always be in the same order?          
+                let linkToReplaceIndex = links.findIndex(linkObject => linkObject.link === checkLinkResponses[index].link.link);
+                links[linkToReplaceIndex] = checkLinkResponses[index].link;
 
                 // This part needs to check for duplicate links
                 // So we can't do it concurrently just in case we miss duplicates
@@ -46,16 +48,16 @@ export async function findDeadLinks(domain: string) {
                     }
                 }
             }
+            i += amountOfThreads - 1;
+
             // console.log('after link is checked link', links[i], i);
-            console.log('current links length ***************', links.length);
+            console.log('current links length and current index ***************', links.length, i);
 
-            // console.log('check link responess', checkLinkResponses[0].links.length, checkLinkResponses[1].links.length);
-
-            // i += 4
         }
     }
 
-    console.log('links', links.length);
+    console.log('links', links);
+    console.log('links length', links.length);
     console.log('bad links', links.filter(link => link.status && link.status > 399));
 
 }

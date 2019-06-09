@@ -12,7 +12,7 @@ After that, you just need to run `npm start` and it'll scrape the categories and
 
 ### Prerequisites
 
-Tested on Node v10.15.0 and NPM v6.4.1.
+Tested on Node v12.4.0 and NPM v6.9.0. Node v12 is (mostly) required for the threads package used here.
 
 ### Installing
 
