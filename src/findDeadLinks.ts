@@ -1,11 +1,7 @@
 import * as requestPromise from 'request-promise';
-import * as cheerio from 'cheerio';
+import { spawn, Thread, Worker, Pool } from 'threads';
+import { ILinkObject, getLinks, checkLink } from './checkLink';
 
-interface ILinkObject {
-    link: string;
-    status: number | null;
-    locationOfLink: string;
-}
 
 export async function findDeadLinks(domain: string) {
     let html: any;
@@ -22,96 +18,44 @@ export async function findDeadLinks(domain: string) {
         throw `Error requesting base domain - ${domain}, ${e.statusCode}`;
     }
     let links: ILinkObject[] = await getLinks(html, domain, domain);
+    const checkLink = await spawn<(linkObject: ILinkObject, domain: string) => Promise<any>>(new Worker('./../../../../dist/checkLinkWorker.js'));
 
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
-            const checkLinkResponse = await checkLink(links[i], links, domain);
-            links[i] = checkLinkResponse.link;
-            links = checkLinkResponse.links;
+            const promises: any[] = [];
 
-            console.log('after link is checked link', links[i], i);
+            promises.push(checkLink(links[i], domain));
+            // promises.push(checkLink(links[i + 1], domain));
+            // promises.push(checkLink(links[i + 2], domain));
+            // promises.push(checkLink(links[i + 3], domain));
+
+
+            const checkLinkResponses = await Promise.all(promises);
+
+            for (let index = 0; index < checkLinkResponses.length; index++) {
+                // Replace the link that doesn't have a status with the link that does
+                // TODO: Will this always be in the same order?
+                links[i + index] = checkLinkResponses[index].link;
+
+                // This part needs to check for duplicate links
+                // So we can't do it concurrently just in case we miss duplicates
+                for (let linkToCheck of checkLinkResponses[index].links) {
+                    if (links.filter(linkObject => linkObject.link === linkToCheck.link).length < 1) {
+                        console.log('pushed in ', linkToCheck.link);
+                        links.push(linkToCheck);
+                    }
+                }
+            }
+            // console.log('after link is checked link', links[i], i);
+            console.log('current links length ***************', links.length);
+
+            // console.log('check link responess', checkLinkResponses[0].links.length, checkLinkResponses[1].links.length);
+
+            // i += 4
         }
     }
 
     console.log('links', links.length);
     console.log('bad links', links.filter(link => link.status && link.status > 399));
 
-}
-
-async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: string) {
-    let html: any;
-    let newDomain: any;
-    try {
-        const options: requestPromise.RequestPromiseOptions = {
-            method: 'GET',
-            resolveWithFullResponse: true,
-            timeout: 10000
-        };
-        const response: any = await requestPromise.get(linkObject.link, options);
-        newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
-        linkObject.status = response.statusCode;
-        html = response.body;
-    }
-    catch (e) {
-        if (e.statusCode) {
-            console.log(`Error trying to request url ${linkObject.link}`, e.statusCode);
-            linkObject.status = e.statusCode;
-        }
-        else {
-            console.log(`Error trying to request url ${linkObject.link}`, e);
-            // Some other error happened so let's give it a 999
-            linkObject.status = 999;
-        }
-    }
-
-    // Let's not get further links if we are on someone else's domain
-    if (newDomain) {
-        if (html && domainCheck(linkObject.link, domain, newDomain)) {
-            links = await getLinks(html, domain, linkObject.link, false, links);
-        }
-    }
-
-    return Promise.resolve({
-        link: linkObject,
-        links: links
-    });
-
-}
-
-async function getLinks(html: any, domain: string, currentUrl: string, deep: boolean = false, links: ILinkObject[] = []) {
-    const $ = cheerio.load(html);
-
-    $('a').each((index, element) => {
-        let link = $(element).attr('href');
-        if (link && (!link.includes('javascript:') && !link.includes('tel:') && !link.includes('mailto:'))) {
-            // Sometimes the first character of the link isn't the domain and has a slash. Let's clean it up
-            link = link.charAt(0) === '/' ? link.slice(1) : link;
-
-            let linkToPush = link.includes('http') ? link : `${domain}/${link}`;
-            // If we're doing a deep check, we'll check the same urls with just different query params
-            linkToPush = deep ? linkToPush : linkToPush.split('?')[0];
-            if (links.filter(linkObject => linkObject.link === linkToPush).length < 1) {
-                // console.log('adding new link', linkToPush, link)
-                links.push({
-                    link: linkToPush,
-                    status: null,
-                    locationOfLink: currentUrl
-                });
-            }
-        }
-    });
-
-    console.log('current links length ***************', links.length);
-    return links;
-
-}
-
-function domainCheck(link: string, domain: string, newDomain:string) {
-    link = link.replace('www.', '');
-    domain = domain.replace('www.', '');
-    newDomain = newDomain.replace('www.', '');
-
-    // console.log('in domain checker **************', link, domain, newDomain);
-
-    return link.includes(domain) && newDomain.includes(domain);
 }
