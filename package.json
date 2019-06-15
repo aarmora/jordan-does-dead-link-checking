@@ -17,7 +17,8 @@
     "cheerio": "^1.0.0-rc.3",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
-    "typescript": "^3.2.2"
+    "typescript": "^3.2.2",
+    "threads": "1.0.0-alpha.4"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.11",
