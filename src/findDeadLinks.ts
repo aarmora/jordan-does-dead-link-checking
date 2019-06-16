@@ -22,7 +22,7 @@ export async function findDeadLinks(domain: string) {
     const spawnLinkChecker = () => {
         return spawn(new Worker('./../../../../dist/checkLinkWorker.js'));
     }
-    const pool = Pool(spawnLinkChecker, 6);
+    const pool = Pool(spawnLinkChecker, 10);
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
             pool.queue(linkChecker => linkChecker(links[i], domain));
@@ -38,6 +38,7 @@ export async function findDeadLinks(domain: string) {
             links[linkToReplaceIndex] = event.returnValue.link;
 
             for (let linkToCheck of event.returnValue.links) {
+                // We want to check if we've already checked this link
                 if (links.filter(linkObject => linkObject.link === linkToCheck.link).length < 1) {
                     console.log('pushed in ', linkToCheck.link);
                     links.push(linkToCheck);
