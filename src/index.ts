@@ -13,5 +13,5 @@ import { performance } from 'perf_hooks';
     }
     const endTime = performance.now();
     console.log('Completed findingDeadLinks', (endTime - startTime));
-    process.exit();
+    // process.exit();
 })();

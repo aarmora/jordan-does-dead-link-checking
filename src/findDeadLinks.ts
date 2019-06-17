@@ -25,9 +25,8 @@ export async function findDeadLinks(domain: string) {
 
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
-            const checkLinkResponse = await checkLink(links[i], links, domain);
-            links[i] = checkLinkResponse.link;
-            links = checkLinkResponse.links;
+            console.log('before check Link');
+            checkLink(links[i], links, domain);
 
             console.log('after link is checked link', links[i], i);
         }
@@ -41,6 +40,7 @@ export async function findDeadLinks(domain: string) {
 async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: string) {
     let html: any;
     let newDomain: any;
+    let newLinks: ILinkObject[] = [];
     try {
         const options: requestPromise.RequestPromiseOptions = {
             method: 'GET',
@@ -67,19 +67,32 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
     // Let's not get further links if we are on someone else's domain
     if (newDomain) {
         if (html && domainCheck(linkObject.link, domain, newDomain)) {
-            links = await getLinks(html, domain, linkObject.link, false, links);
+            newLinks = await getLinks(html, domain, linkObject.link, false);
         }
     }
 
-    return Promise.resolve({
-        link: linkObject,
-        links: links
-    });
+    // Replace the link we were checking with the completed object
+    let linkToReplaceIndex = links.findIndex(linkObject => linkObject.link === linkObject.link);
+    links[linkToReplaceIndex] = linkObject;
+
+    for (let linkToCheck of newLinks) {
+        if (links.filter(linkObject => linkObject.link === linkToCheck.link).length < 1) {
+            console.log('pushed in ', linkToCheck.link);
+            links.push(linkToCheck);
+
+            checkLink(linkToCheck, newLinks, domain);
+        }
+    }
+
+
+
+    return Promise.resolve({ link: linkObject, links: links });
 
 }
 
-async function getLinks(html: any, domain: string, currentUrl: string, deep: boolean = false, links: ILinkObject[] = []) {
+async function getLinks(html: any, domain: string, currentUrl: string, deep: boolean = false) {
     const $ = cheerio.load(html);
+    const links: ILinkObject[] = [];
 
     $('a').each((index, element) => {
         let link = $(element).attr('href');
@@ -106,7 +119,7 @@ async function getLinks(html: any, domain: string, currentUrl: string, deep: boo
 
 }
 
-function domainCheck(link: string, domain: string, newDomain:string) {
+function domainCheck(link: string, domain: string, newDomain: string) {
     link = link.replace('www.', '');
     domain = domain.replace('www.', '');
     newDomain = newDomain.replace('www.', '');
