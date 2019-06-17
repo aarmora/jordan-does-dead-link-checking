@@ -10,6 +10,8 @@ Update the domain that you want to search in the `src/index.ts` file.
 
 After that, you just need to run `npm start` and it'll scrape the categories and email the results to you.
 
+[Full Guide](https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/)
+
 ### Prerequisites
 
 Tested on Node v12.4.0 and NPM v6.9.0. Node v12 is (mostly) required for the threads package used here.
