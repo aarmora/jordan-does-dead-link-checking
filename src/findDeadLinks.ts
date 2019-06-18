@@ -80,8 +80,9 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
             console.log('pushed in ', linkToCheck.link);
             links.push(linkToCheck);
 
-            checkLink(linkToCheck, newLinks, domain);
+            checkLink(linkToCheck, links, domain);
         }
+        console.log('current links length ***************', links.length);
     }
 
 
@@ -114,7 +115,6 @@ async function getLinks(html: any, domain: string, currentUrl: string, deep: boo
         }
     });
 
-    console.log('current links length ***************', links.length);
     return links;
 
 }
