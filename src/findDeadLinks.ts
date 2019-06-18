@@ -22,15 +22,18 @@ export async function findDeadLinks(domain: string) {
         throw `Error requesting base domain - ${domain}, ${e.statusCode}`;
     }
     let links: ILinkObject[] = await getLinks(html, domain, domain);
+    const promises: any[] = [];
 
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
             console.log('before check Link');
-            checkLink(links[i], links, domain);
+            promises.push(checkLink(links[i], links, domain));
 
             console.log('after link is checked link', links[i], i);
         }
     }
+
+    await Promise.all(promises);
 
     console.log('links', links.length);
     console.log('bad links', links.filter(link => link.status && link.status > 399));
@@ -74,18 +77,18 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
     // Replace the link we were checking with the completed object
     let linkToReplaceIndex = links.findIndex(linkObject => linkObject.link === linkObject.link);
     links[linkToReplaceIndex] = linkObject;
+    const promises: any[] = [];
 
     for (let linkToCheck of newLinks) {
         if (links.filter(linkObject => linkObject.link === linkToCheck.link).length < 1) {
             console.log('pushed in ', linkToCheck.link);
             links.push(linkToCheck);
 
-            checkLink(linkToCheck, links, domain);
+            promises.push(checkLink(linkToCheck, links, domain));
         }
-        console.log('current links length ***************', links.length);
     }
 
-
+    await Promise.all(promises);
 
     return Promise.resolve({ link: linkObject, links: links });
 
