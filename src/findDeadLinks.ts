@@ -88,7 +88,6 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
     }
 
     await Promise.all(promises);
-    console.log('********** completed down here');
 
     return Promise.resolve({ link: linkObject, links: links });
 
