@@ -28,12 +28,11 @@ export async function findDeadLinks(domain: string) {
         if (!links[i].status) {
             console.log('before check Link');
             promises.push(checkLink(links[i], links, domain));
-
-            console.log('after link is checked link', links[i], i);
         }
     }
 
     await Promise.all(promises);
+    console.log('********** completed up here');
 
     console.log('links', links.length);
     console.log('bad links', links.filter(link => link.status && link.status > 399));
@@ -89,6 +88,7 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
     }
 
     await Promise.all(promises);
+    console.log('********** completed down here');
 
     return Promise.resolve({ link: linkObject, links: links });
 
