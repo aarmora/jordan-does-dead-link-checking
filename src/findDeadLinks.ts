@@ -65,7 +65,7 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
             linkObject.status = 999;
         }
     }
-
+    console.log(`after link is checked. Link: ${linkObject.link} Status: ${linkObject.status}`);
     // Let's not get further links if we are on someone else's domain
     if (newDomain) {
         if (html && domainCheck(linkObject.link, domain, newDomain)) {
@@ -80,7 +80,7 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
 
     for (let linkToCheck of newLinks) {
         if (links.filter(linkObject => linkObject.link === linkToCheck.link).length < 1) {
-            console.log('pushed in ', linkToCheck.link);
+            // console.log('pushed in ', linkToCheck.link);
             links.push(linkToCheck);
 
             promises.push(checkLink(linkToCheck, links, domain));
