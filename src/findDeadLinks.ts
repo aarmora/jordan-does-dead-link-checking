@@ -1,5 +1,6 @@
 import * as requestPromise from 'request-promise';
 import * as cheerio from 'cheerio';
+import { Agent } from 'https';
 
 interface ILinkObject {
     link: string;
@@ -9,6 +10,7 @@ interface ILinkObject {
 
 export async function findDeadLinks(domain: string) {
     let html: any;
+
     try {
         const options = {
             method: 'GET',
@@ -26,13 +28,11 @@ export async function findDeadLinks(domain: string) {
 
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
-            console.log('before check Link');
             promises.push(checkLink(links[i], links, domain));
         }
     }
 
     await Promise.all(promises);
-    console.log('********** completed up here');
 
     console.log('links', links.length);
     console.log('bad links', links.filter(link => link.status && link.status > 399));
@@ -47,7 +47,10 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
         const options: requestPromise.RequestPromiseOptions = {
             method: 'GET',
             resolveWithFullResponse: true,
-            timeout: 10000
+            timeout: 10000,
+            agentOptions: {
+                maxSockets: 4
+            }
         };
         const response: any = await requestPromise.get(linkObject.link, options);
         newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
