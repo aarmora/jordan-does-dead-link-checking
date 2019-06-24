@@ -1,14 +1,13 @@
 import * as requestPromise from 'request-promise';
 import * as cheerio from 'cheerio';
-import { Agent } from 'https';
 
-interface ILinkObject {
+export interface ILinkObject {
     link: string;
     status: number | null;
     locationOfLink: string;
 }
 
-export async function findDeadLinks(domain: string) {
+export async function findDeadLinks(domain: string, desiredIOThreads: number) {
     let html: any;
 
     try {
@@ -28,18 +27,19 @@ export async function findDeadLinks(domain: string) {
 
     for (let i = 0; i < links.length; i++) {
         if (!links[i].status) {
-            promises.push(checkLink(links[i], links, domain));
+            promises.push(checkLink(links[i], links, domain, desiredIOThreads));
         }
     }
 
     await Promise.all(promises);
 
-    console.log('links', links.length);
-    console.log('bad links', links.filter(link => link.status && link.status > 399));
+    console.log('Total links', links.length);
+    console.log('Potentially bad links', links.filter(link => link.status && link.status > 399));
+    return links.filter(link => link.status && link.status > 399);
 
 }
 
-async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: string) {
+async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: string, desiredIOThreads: number) {
     let html: any;
     let newDomain: any;
     let newLinks: ILinkObject[] = [];
@@ -49,8 +49,9 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
             resolveWithFullResponse: true,
             timeout: 10000,
             agentOptions: {
-                maxSockets: 4
-            }
+                maxSockets: desiredIOThreads
+            },
+            headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"}
         };
         const response: any = await requestPromise.get(linkObject.link, options);
         newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
@@ -64,11 +65,12 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
         }
         else {
             console.log(`Error trying to request url ${linkObject.link}`, e);
+
             // Some other error happened so let's give it a 999
             linkObject.status = 999;
         }
     }
-    console.log(`after link is checked. Link: ${linkObject.link} Status: ${linkObject.status}`);
+    console.log(`Link checked. Link: ${linkObject.link} Status: ${linkObject.status}`);
     // Let's not get further links if we are on someone else's domain
     if (newDomain) {
         if (html && domainCheck(linkObject.link, domain, newDomain)) {
@@ -83,10 +85,9 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
 
     for (let linkToCheck of newLinks) {
         if (links.filter(linkObject => linkObject.link === linkToCheck.link).length < 1) {
-            // console.log('pushed in ', linkToCheck.link);
             links.push(linkToCheck);
 
-            promises.push(checkLink(linkToCheck, links, domain));
+            promises.push(checkLink(linkToCheck, links, domain, desiredIOThreads));
         }
     }
 
@@ -96,7 +97,7 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
 
 }
 
-async function getLinks(html: any, domain: string, currentUrl: string, deep: boolean = false) {
+export async function getLinks(html: any, domain: string, currentUrl: string, deep: boolean = false) {
     const $ = cheerio.load(html);
     const links: ILinkObject[] = [];
 
@@ -109,8 +110,9 @@ async function getLinks(html: any, domain: string, currentUrl: string, deep: boo
             let linkToPush = link.includes('http') ? link : `${domain}/${link}`;
             // If we're doing a deep check, we'll check the same urls with just different query params
             linkToPush = deep ? linkToPush : linkToPush.split('?')[0];
-            if (links.filter(linkObject => linkObject.link === linkToPush).length < 1) {
-                // console.log('adding new link', linkToPush, link)
+
+            // We're going to skip #comment and #respond since it's not really a link
+            if (!linkToPush.includes('#comment') && !linkToPush.includes('#respond') && links.filter(linkObject => linkObject.link === linkToPush).length < 1) {
                 links.push({
                     link: linkToPush,
                     status: null,
@@ -124,12 +126,10 @@ async function getLinks(html: any, domain: string, currentUrl: string, deep: boo
 
 }
 
-function domainCheck(link: string, domain: string, newDomain: string) {
+export function domainCheck(link: string, domain: string, newDomain: string) {
     link = link.replace('www.', '');
     domain = domain.replace('www.', '');
     newDomain = newDomain.replace('www.', '');
-
-    // console.log('in domain checker **************', link, domain, newDomain);
 
     return link.includes(domain) && newDomain.includes(domain);
 }
