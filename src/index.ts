@@ -24,7 +24,7 @@ import * as fs from 'fs';
         const badLinks = await findDeadLinks(domain, desiredIOThreads);
         const csv = json2csv.parse(badLinks);
         const cleanDomain = domain.replace('http://', '').replace('https://', '');
-        const filePath = `${cleanDomain}-bad-link-checking-results.csv`;
+        const filePath = `results/${cleanDomain}-bad-link-checking-results.csv`;
 
         await fsPromises.writeFile(filePath, csv);
 

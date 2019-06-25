@@ -127,7 +127,6 @@ export async function getLinks(html: any, domain: string, currentUrl: string, de
 }
 
 export function domainCheck(link: string, domain: string, newDomain: string) {
-    console.log('you are called, right?');
 
     link = link.replace('www.', '');
     domain = domain.replace('www.', '');

@@ -1,4 +1,4 @@
-# Jordan Does Dead Link Checking
+# Jordan Does Dead Link Checking [![Build Status](https://travis-ci.org/aarmora/jordan-does-dead-link-checking.svg?branch=master)](https://travis-ci.org/aarmora/jordan-does-dead-link-checking)
 
 Searches a specified domain name for any dead links that exist.
 
@@ -23,6 +23,10 @@ After installing [NodeJS](https://nodejs.org/en/) you should be able to just run
 ```
 npm i
 ```
+
+### Unit Testing
+
+`npm test`
 
 
 ## Built With
