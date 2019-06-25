@@ -39,7 +39,7 @@ export async function findDeadLinks(domain: string, desiredIOThreads: number) {
 
 }
 
-async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: string, desiredIOThreads: number) {
+export async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: string, desiredIOThreads: number) {
     let html: any;
     let newDomain: any;
     let newLinks: ILinkObject[] = [];
@@ -71,7 +71,7 @@ async function checkLink(linkObject: ILinkObject, links: ILinkObject[], domain: 
         }
     }
     console.log(`Link checked. Link: ${linkObject.link} Status: ${linkObject.status}`);
-    // Let's not get further links if we are on someone else's domain
+    // Let's not get further links if we are on someone else's domain    
     if (newDomain) {
         if (html && domainCheck(linkObject.link, domain, newDomain)) {
             newLinks = await getLinks(html, domain, linkObject.link, false);
@@ -127,6 +127,8 @@ export async function getLinks(html: any, domain: string, currentUrl: string, de
 }
 
 export function domainCheck(link: string, domain: string, newDomain: string) {
+    console.log('you are called, right?');
+
     link = link.replace('www.', '');
     domain = domain.replace('www.', '');
     newDomain = newDomain.replace('www.', '');
