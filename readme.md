@@ -1,4 +1,4 @@
-# Jordan Does Dead Link Checking [![Build Status](https://travis-ci.org/aarmora/jordan-does-dead-link-checking.svg?branch=master)](https://travis-ci.org/aarmora/jordan-does-dead-link-checking)
+# Jordan Does Dead Link Checking [![Build Status](https://travis-ci.com/aarmora/jordan-does-dead-link-checking.svg?branch=master)](https://travis-ci.com/aarmora/jordan-does-dead-link-checking)
 
 Searches a specified domain name for any dead links that exist.
 
