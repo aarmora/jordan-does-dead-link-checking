@@ -51,7 +51,7 @@ export async function checkLink(linkObject: ILinkObject, links: ILinkObject[], d
             agentOptions: {
                 maxSockets: desiredIOThreads
             },
-            headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36"}
+            headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36 "}
         };
         const response: any = await requestPromise.get(linkObject.link, options);
         newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
