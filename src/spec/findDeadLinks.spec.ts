@@ -167,8 +167,6 @@ describe('getLinks()', () => {
         expect(links.length).to.equal(1);
     });
 
-
-
 });
 
 describe('checkLink()', () => {

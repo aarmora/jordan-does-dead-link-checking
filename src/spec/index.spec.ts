@@ -25,5 +25,4 @@ describe('formatDomain()', () => {
         expect(domain).to.equal('https://javascriptwebscrapingguy.com');
     });
 
-
 });
