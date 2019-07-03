@@ -1,227 +1,136 @@
-import { describe } from "mocha";
-import { expect } from 'chai';
-import { ILinkObject, checkLink, domainCheck, getLinks } from "../findDeadLinks";
-import { testHTMLPage } from './test-page.stub';
+import * as requestPromise from 'request-promise';
 import nock from "nock";
+import sinon from "sinon";
+import { findDeadLinks } from '../findDeadLinks';
+import { expect } from 'chai';
+import * as helpers from './../helpers';
+import * as checkLinkFunction from './../checkLink';
 
+describe('findDeadLinks()', () => {
+    let getLinksStub;
+    let checkLinkStub;
+    const domainToSend = 'https://javascriptwebscrapingguy.com';
+    const desiredIOThreadsToSend = 4;
 
-describe('domainCheck()', () => {
+    afterEach(() => {
+        if (getLinksStub) {
+            getLinksStub.restore();
+        }
+        if (checkLinkStub) {
+            checkLinkStub.restore();
+        }
+    });
 
-    it('should return true if the link and newDomain include the original domain', () => {
-        const link = 'http://pizzalink.com/whoa';
-        const newDomain = 'http://pizzalink.com';
-        const domain = 'http://pizzalink.com';
+    it('should call getLinks() once', async () => {
+        const returnLinks: helpers.ILinkObject[] = [
+            { link: 'https://heyBuddy.com', status: 200, locationOfLink: 'https://javascriptwebscrapingguy.com' },
+            { link: 'https://heyAnotherBuddy.com', status: 200, locationOfLink: 'https://javascriptwebscrapingguy.com' }
+        ];
+        getLinksStub = sinon.stub(helpers, 'getLinks').returns(Promise.resolve(returnLinks));
 
-        expect(domainCheck(link, domain, newDomain)).to.equal(true);
+        nock(domainToSend).get('/').reply(200);
+
+        await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+
+        expect(getLinksStub.callCount).to.equal(1);
 
     });
 
-    it('should return true if the link and newDomain include the original domain even if the link has www', () => {
-        const link = 'http://www.pizzalink.com/whoa';
-        const newDomain = 'http://pizzalink.com';
-        const domain = 'http://pizzalink.com';
+    it('should call checkLink() twice if two links are returned from getLinks()', async () => {
+        const returnLinks: helpers.ILinkObject[] = [
+            { link: 'https://heyBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' },
+            { link: 'https://heyAnotherBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' }
+        ];
+        getLinksStub = sinon.stub(helpers, 'getLinks').returns(Promise.resolve(returnLinks));
 
-        expect(domainCheck(link, domain, newDomain)).to.equal(true);
+        checkLinkStub = sinon.stub(checkLinkFunction, 'checkLink');
 
-    });
+        nock(domainToSend).get('/').reply(200);
 
-    it('should return true if the link and newDomain include the original domain even if the domain has www', () => {
-        const link = 'http://pizzalink.com/whoa';
-        const newDomain = 'http://pizzalink.com';
-        const domain = 'http://www.pizzalink.com';
+        await findDeadLinks(domainToSend, desiredIOThreadsToSend);
 
-        expect(domainCheck(link, domain, newDomain)).to.equal(true);
-
-    });
-
-    it('should return true if the link and newDomain include the original domain even if the newDomain has www', () => {
-        const link = 'http://pizzalink.com/whoa';
-        const newDomain = 'http://www.pizzalink.com';
-        const domain = 'http://pizzalink.com';
-
-        expect(domainCheck(link, domain, newDomain)).to.equal(true);
+        expect(checkLinkStub.callCount).to.equal(2);
 
     });
 
-    it('should return false if the link does not include the original domain', () => {
-        const link = 'http://pizzalinkerer.com/whoa';
-        const newDomain = 'http://pizzalink.com';
-        const domain = 'http://pizzalink.com';
+    it('should call checkLink() 0 times if two links are returns from getLinks() but they have a status', async () => {
+        const returnLinks: helpers.ILinkObject[] = [
+            { link: 'https://heyBuddy.com', status: 200, locationOfLink: 'https://javascriptwebscrapingguy.com' },
+            { link: 'https://heyAnotherBuddy.com', status: 200, locationOfLink: 'https://javascriptwebscrapingguy.com' }
+        ];
+        getLinksStub = sinon.stub(helpers, 'getLinks').returns(Promise.resolve(returnLinks));
 
-        expect(domainCheck(link, domain, newDomain)).to.equal(false);
+        checkLinkStub = sinon.stub(checkLinkFunction, 'checkLink');
+
+        nock(domainToSend).get('/').reply(200);
+
+        await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+
+        expect(checkLinkStub.callCount).to.equal(0);
 
     });
 
-    it('should return false if the newDomain does not include the original domain', () => {
-        const link = 'http://pizzalinker.com/whoa';
-        const newDomain = 'http://pizzalinker.com';
-        const domain = 'http://pizzalink.com';
+    it('should return the number of bad links (if two 404s, two bad links)', async () => {
+        const returnLinks: helpers.ILinkObject[] = [
+            { link: 'https://heyBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' },
+            { link: 'https://heyAnotherBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' }
+        ];
+        getLinksStub = sinon.stub(helpers, 'getLinks').returns(Promise.resolve(returnLinks));
 
-        expect(domainCheck(link, domain, newDomain)).to.equal(false);
+        nock(domainToSend).get('/').reply(200);
+        nock("https://heyBuddy.com").get('/').reply(404);
+        nock("https://heyAnotherBuddy.com").get('/').reply(404);
 
-    });
-});
-
-
-describe('getLinks()', () => {
-
-    it('should return an array with a length of 26 if passed in html with 26 a tags in it', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const links = await getLinks(testHTMLPage, domain, currentUrl);
-
-        expect(links.length).to.equal(26);
-    });
-
-    it('should have an array filled with ILinkObjects', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const links = await getLinks(testHTMLPage, domain, currentUrl);
-        const testLinkObject: ILinkObject = {
-            link: 'https://javascriptwebscrapingguy.com/#content',
-            status: null,
-            locationOfLink: currentUrl
-        };
-
-        expect(links[0]).to.deep.equal(testLinkObject);
-    });
-
-    it('should not include an href with "javascript:"', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = '<a href="javascript:void()">click me </a>';
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links.length).to.equal(0);
-    });
-
-    it('should not include an href with "mailto:"', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = '<a href="mailto:bill@pizza.com">click me </a>';
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links.length).to.equal(0);
-    });
-
-    it('should not include an href with "tel:"', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = '<a href="tel:1234567890">click me </a>';
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links.length).to.equal(0);
-    });
-
-    it('should not include an href that has "#comment"', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = `<a href="${currentUrl}#comment">click me </a>`;
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links.length).to.equal(0);
-    });
-
-    it('should not include an href that has "#respond"', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = `<a href="${currentUrl}#respond">click me </a>`;
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links.length).to.equal(0);
-    });
-
-    it('should split off all query parameters if not doing a deep check', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = `<a href="${currentUrl}?pizza=true">click me </a>`;
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links[0].link).to.equal(currentUrl);
-    });
-
-    it('should split off the slash at the first character if it is there and then add the domain with a slash', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = `<a href="/mysterio-man">click me </a>`;
-        const links = await getLinks(testHTML, domain, currentUrl);
-
-        expect(links[0].link).to.equal(`${domain}/mysterio-man`);
-    });
-
-    it('should handle multiple links', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = `<a href="/mysterio-man">click me </a> <a href="/mysterio-manners">click me again </a>`;
-        const links = await getLinks(testHTML, domain, currentUrl);
+        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend);
 
         expect(links.length).to.equal(2);
+
     });
 
-    it('should not add the same link twice', async () => {
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const currentUrl = 'https://javascriptwebscrapingguy.com/jordan-plays-pool-multi-threading-with-a-pool-queue/';
-        const testHTML = `<a href="/mysterio-man">click me </a> <a href="/mysterio-man">click me again </a>`;
-        const links = await getLinks(testHTML, domain, currentUrl);
+    it('should return the number of bad links (if one 404 and one 500, two bad links)', async () => {
+        const returnLinks: helpers.ILinkObject[] = [
+            { link: 'https://heyBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' },
+            { link: 'https://heyAnotherBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' }
+        ];
+        getLinksStub = sinon.stub(helpers, 'getLinks').returns(Promise.resolve(returnLinks));
+
+        nock(domainToSend).get('/').reply(200);
+        nock("https://heyBuddy.com").get('/').reply(404);
+        nock("https://heyAnotherBuddy.com").get('/').reply(500);
+
+        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+
+        expect(links.length).to.equal(2);
+
+    });
+
+    it('should return the number of bad links (if one 404 and one 200, one bad link)', async () => {
+        const returnLinks: helpers.ILinkObject[] = [
+            { link: 'https://heyAnotherBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' },
+            { link: 'https://heyBuddy.com', status: null, locationOfLink: 'https://javascriptwebscrapingguy.com' }
+        ];
+        getLinksStub = sinon.stub(helpers, 'getLinks').returns(Promise.resolve(returnLinks));
+
+        nock(domainToSend).get('/').reply(200);
+        nock("https://heyBuddy.com").get('/').reply(200);
+        nock("https://heyAnotherBuddy.com").get('/').reply(400);
+
+        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend);
 
         expect(links.length).to.equal(1);
-    });
-
-});
-
-describe('checkLink()', () => {
-
-    it('should return an object with an ILinkObject with a status of 200 if request is successful', async () => {
-        const originalLinkObject: ILinkObject = {
-            link: 'https://javascriptwebscrapingguy.com/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/',
-            status: null,
-            locationOfLink: 'https://javascriptwebscrapingguy.com'
-        };
-        const originalLinks = [];
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const desiredIOThreads = 4;
-
-        nock('https://javascriptwebscrapingguy.com').get('/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/').reply(200, '');
-
-        const checkLinkResponse = await checkLink(originalLinkObject, originalLinks, domain, desiredIOThreads);
-
-        expect(checkLinkResponse.link.status).to.equal(200);
 
     });
 
-    it('should return an object with an ILinkObject with a status of 404 if request returns 404', async () => {
-        const originalLinkObject: ILinkObject = {
-            link: 'https://javascriptwebscrapingguy.com/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/',
-            status: null,
-            locationOfLink: 'https://javascriptwebscrapingguy.com'
-        };
-        const originalLinks = [];
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const desiredIOThreads = 4;
+    it('should throw an error if the original domain request fails', async () => {
 
-        nock('https://javascriptwebscrapingguy.com').get('/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/').reply(404, '');
+        nock(domainToSend).get('/').reply(500);
 
-        const checkLinkResponse = await checkLink(originalLinkObject, originalLinks, domain, desiredIOThreads);
-
-        expect(checkLinkResponse.link.status).to.equal(404);
-
+        try {
+            await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        }
+        catch (e) { 
+            expect(e).to.equal(`Error requesting base domain - ${domainToSend}, 500`);
+        }
     });
+})
 
-    it('should return an object with an ILinkObject with a status of 999 if request takes longer than 10000ms', async () => {
-        const originalLinkObject: ILinkObject = {
-            link: 'https://javascriptwebscrapingguy.com/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/',
-            status: null,
-            locationOfLink: 'https://javascriptwebscrapingguy.com'
-        };
-        const originalLinks = [];
-        const domain = 'https://javascriptwebscrapingguy.com';
-        const desiredIOThreads = 4;
-
-        nock('https://javascriptwebscrapingguy.com').get('/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/').delayConnection(10050);
-
-        const checkLinkResponse = await checkLink(originalLinkObject, originalLinks, domain, desiredIOThreads);
-
-        expect(checkLinkResponse.link.status).to.equal(999);
-
-    });
-});
