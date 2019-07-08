@@ -226,6 +226,8 @@ describe('checkLink()', () => {
         const desiredIOThreads = 4;
 
         nock('https://javascriptwebscrapingguy.com').get('/jordan-takes-advantage-of-multithreaded-i-o-in-nodejs/').reply(200, '<button>click me</button>');
+        nock('https://heyBuddy.com').get('/').reply(200);
+        nock('https://heyAnotherbuddy.com').get('/').reply(200);
 
         domainCheckStub = sinon.stub(helpers, 'domainCheck').returns(true);
         const returnLinks: helpers.ILinkObject[] = [
@@ -248,7 +250,7 @@ describe('checkLink()', () => {
                 {
                     link: "https://heyAnotherBuddy.com",
                     locationOfLink: "https://javascriptwebscrapingguy.com",
-                    status: 999
+                    status: 200
                 }
             ]
         };
