@@ -1,40 +1,41 @@
 {
-  "name": "link-checker",
-  "version": "1.0.0",
-  "description": "Goes through a website by domain and finds any broken links.",
-  "main": "./dist/index.js",
-  "scripts": {
-    "start": "tsc && node ./dist/index.js",
-    "test": "mocha -r ts-node/register src/spec/**/*.spec.ts --exit"
-  },
-  "keywords": [
-    "puppeteer",
-    "javascript",
-    "typescript"
-  ],
-  "author": "Jordan Hansen",
-  "license": "ISC",
-  "dependencies": {
-    "cheerio": "^1.0.0-rc.3",
-    "json2csv": "^4.5.1",
-    "request": "^2.88.0",
-    "request-promise": "^4.2.4",
-    "typescript": "^3.2.2"
-  },
-  "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/chai-spies": "^1.0.0",
-    "@types/cheerio": "^0.22.11",
-    "@types/json2csv": "^4.5.0",
-    "@types/mocha": "^5.2.7",
-    "@types/nock": "^10.0.3",
-    "@types/request-promise": "^4.1.44",
-    "@types/sinon": "^7.0.13",
-    "chai": "^4.2.0",
-    "chai-spies": "^1.0.0",
-    "mocha": "^6.1.4",
-    "nock": "^10.0.6",
-    "sinon": "^7.3.2",
-    "ts-node": "^8.3.0"
-  }
+    "name": "link-checker",
+    "version": "1.0.0",
+    "description": "Goes through a website by domain and finds any broken links.",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "scripts": {
+        "start": "tsc && node ./dist/index-local.js",
+        "test": "mocha -r ts-node/register src/spec/**/*.spec.ts --exit"
+    },
+    "keywords": [
+        "puppeteer",
+        "javascript",
+        "typescript"
+    ],
+    "author": "Jordan Hansen",
+    "license": "ISC",
+    "dependencies": {
+        "cheerio": "^1.0.0-rc.3",
+        "json2csv": "^4.5.1",
+        "request": "^2.88.0",
+        "request-promise": "^4.2.4",
+        "typescript": "^3.2.2"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/chai-spies": "^1.0.0",
+        "@types/cheerio": "^0.22.11",
+        "@types/json2csv": "^4.5.0",
+        "@types/mocha": "^5.2.7",
+        "@types/nock": "^10.0.3",
+        "@types/request-promise": "^4.1.44",
+        "@types/sinon": "^7.0.13",
+        "chai": "^4.2.0",
+        "chai-spies": "^1.0.0",
+        "mocha": "^6.1.4",
+        "nock": "^10.0.6",
+        "sinon": "^7.3.2",
+        "ts-node": "^8.3.0"
+    }
 }

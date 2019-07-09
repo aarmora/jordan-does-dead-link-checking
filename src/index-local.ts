@@ -1,28 +1,23 @@
 import { findDeadLinks } from "./findDeadLinks";
 import { performance } from 'perf_hooks';
 import * as json2csv from 'json2csv';
+import * as readline from 'readline';
 import * as fs from 'fs';
-process.env.UV_THREADPOOL_SIZE = "128";
 
-export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: any) {
-    console.log('hit deadLinkChecker', desiredDomain, desiredIOThreads);
+(async () => {
     let domain: string = '';
     const fsPromises = fs.promises;
-    domain = formatDomain(desiredDomain);
-
-    if (!desiredIOThreads) {
-        desiredIOThreads = 4;
-    }
-    else if (parseInt(desiredIOThreads) === NaN) {
-        desiredIOThreads = 4;
-        // TODO: Let the user know the IO threads is wrong and we're going to assume 4
-        console.log('Invalid desired IO thread format, using 4');
-    }
-    else {
-        desiredIOThreads = parseInt(desiredIOThreads);
-    }
 
     try {
+        const desiredDomain = await readLinePromise('Desired website to check links? (https://javascriptwebscrapingguy.com) ');
+
+        domain = formatDomain(desiredDomain);
+
+        let desiredIOThreads = await readLinePromise('Desired I/O threads? (4) ');
+
+        if (!desiredIOThreads) {
+            desiredIOThreads = 4;
+        }
 
         const startTime = performance.now();
 
@@ -30,11 +25,7 @@ export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: a
         if (badLinks.length > 0) {
             const csv = json2csv.parse(badLinks);
             const cleanDomain = domain.replace('http://', '').replace('https://', '');
-            const directory = 'results';
-            const filePath = `${directory}/${cleanDomain}-bad-link-checking-results.csv`;
-            if (!fs.existsSync(directory)) {
-                fs.mkdirSync(directory);
-            }
+            const filePath = `results/${cleanDomain}-bad-link-checking-results.csv`;
 
             await fsPromises.writeFile(filePath, csv);
         }
@@ -42,14 +33,29 @@ export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: a
         const endTime = performance.now();
         console.log('Completed findingDeadLinks. Total time -', (endTime - startTime));
 
-        return badLinks;
-
     }
     catch (e) {
         console.log('Error: ', e);
         process.exit();
     }
 
+
+})();
+
+function readLinePromise(question: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+
+
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout
+        });
+
+        rl.question(question, (answer) => {
+            resolve(answer);
+            rl.close();
+        });
+    });
 }
 
 export function formatDomain(desiredDomain?: string): string {

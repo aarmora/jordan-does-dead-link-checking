@@ -8,7 +8,8 @@ export async function findDeadLinks(domain: string, desiredIOThreads: number) {
     try {
         const options = {
             method: 'GET',
-            resolveWithFullResponse: true
+            resolveWithFullResponse: true,
+            timeout: 10000
         };
         const response: any = await requestPromise.get(`${domain}`, options);
         html = response.body;

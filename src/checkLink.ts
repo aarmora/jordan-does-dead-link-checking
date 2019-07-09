@@ -11,30 +11,32 @@ export async function checkLink(linkObject: ILinkObject, links: ILinkObject[], d
             method: 'GET',
             resolveWithFullResponse: true,
             timeout: 10000,
+            time: true,
             agentOptions: {
                 maxSockets: desiredIOThreads
             },
-            headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36 "}
+            headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36 " }
         };
         const response: any = await requestPromise.get(linkObject.link, options);
+        console.log('elapsed time****', response.elapsedTime);
         newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
         linkObject.status = response.statusCode;
         html = response.body;
     }
     catch (e) {
         if (e.statusCode) {
-            console.log(`Error trying to request url ${linkObject.link}`, e.statusCode);
+            console.log(`Error trying to request url ${linkObject.link}`, e.statusCode, e.elapsedTime);
             linkObject.status = e.statusCode;
         }
         else {
-            console.log(`Error trying to request url ${linkObject.link}`, e);
+            console.log(`Error trying to request url ${linkObject.link}`, e, e.elapsedTime);
 
             // Some other error happened so let's give it a 999
             linkObject.status = 999;
         }
     }
     console.log(`Link checked. Link: ${linkObject.link} Status: ${linkObject.status}`);
-    // Let's not get further links if we are on someone else's domain    
+    // Let's not get further links if we are on someone else's domain
     if (newDomain) {
         if (html && domainCheck(linkObject.link, domain, newDomain)) {
             newLinks = await getLinks(html, domain, linkObject.link, false);
