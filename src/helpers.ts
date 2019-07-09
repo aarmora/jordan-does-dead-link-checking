@@ -9,8 +9,8 @@ export interface ILinkObject {
 
 export function domainCheck(link: string, domain: string, newDomain: string) {
     link = link.replace('www.', '');
-    domain = domain.replace('www.', '');
-    newDomain = newDomain.replace('www.', '');
+    domain = domain.replace('www.', '').replace('http://', '').replace('https://', '');
+    newDomain = newDomain.replace('www.', '').replace('http://', '').replace('https://', '');
 
     return link.includes(domain) && newDomain.includes(domain);
 }
