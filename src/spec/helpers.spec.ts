@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { domainCheck, getLinks, ILinkObject} from './../helpers'; 
+import { domainCheck, getLinks, ILinkObject } from './../helpers';
 import { testHTMLPage } from './test-page.stub';
 
 describe('domainCheck()', () => {
@@ -55,6 +55,15 @@ describe('domainCheck()', () => {
         const domain = 'http://pizzalink.com';
 
         expect(domainCheck(link, domain, newDomain)).to.equal(false);
+
+    });
+
+    it('should return true even if the domains have different http protocols', () => {
+        const link = 'http://pizzalink.com/whoa';
+        const newDomain = 'https://pizzalink.com';
+        const domain = 'http://pizzalink.com';
+
+        expect(domainCheck(link, domain, newDomain)).to.equal(true);
 
     });
 });
