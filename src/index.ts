@@ -2,7 +2,6 @@ import { findDeadLinks } from "./findDeadLinks";
 import { performance } from 'perf_hooks';
 import * as json2csv from 'json2csv';
 import * as fs from 'fs';
-process.env.UV_THREADPOOL_SIZE = "128";
 
 export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: any) {
     console.log('hit deadLinkChecker', desiredDomain, desiredIOThreads);

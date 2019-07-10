@@ -17,8 +17,9 @@ export async function checkLink(linkObject: ILinkObject, links: ILinkObject[], d
             },
             headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36 " }
         };
+        console.log('before', linkObject.link, new Date().getSeconds());
         const response: any = await requestPromise.get(linkObject.link, options);
-        console.log('elapsed time****', response.elapsedTime);
+        console.log('after elapsed time****', linkObject.link, response.elapsedTime, new Date().getSeconds());
         newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
         linkObject.status = response.statusCode;
         html = response.body;
