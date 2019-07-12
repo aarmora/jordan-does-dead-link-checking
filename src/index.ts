@@ -3,7 +3,7 @@ import { performance } from 'perf_hooks';
 import * as json2csv from 'json2csv';
 import * as fs from 'fs';
 
-export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: any) {
+export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: any, links: any[]) {
     console.log('hit deadLinkChecker', desiredDomain, desiredIOThreads);
     let domain: string = '';
     const fsPromises = fs.promises;
@@ -25,7 +25,7 @@ export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: a
 
         const startTime = performance.now();
 
-        const badLinks = await findDeadLinks(domain, desiredIOThreads);
+        const badLinks = await findDeadLinks(domain, desiredIOThreads, links);
         if (badLinks.length > 0) {
             const csv = json2csv.parse(badLinks);
             const cleanDomain = domain.replace('http://', '').replace('https://', '');
@@ -46,7 +46,7 @@ export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: a
     }
     catch (e) {
         console.log('Error: ', e);
-        process.exit();
+        throw `Error: ${e}`;
     }
 
 }

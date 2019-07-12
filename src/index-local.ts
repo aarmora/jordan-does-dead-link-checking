@@ -21,13 +21,13 @@ import * as fs from 'fs';
 
         const startTime = performance.now();
 
-        const badLinks = await findDeadLinks(domain, desiredIOThreads);
+        const badLinks = await findDeadLinks(domain, desiredIOThreads, []);
         if (badLinks.length > 0) {
             const csv = json2csv.parse(badLinks);
             const cleanDomain = domain.replace('http://', '').replace('https://', '');
             const filePath = `results/${cleanDomain}-bad-link-checking-results.csv`;
 
-            await fsPromises.writeFile(filePath, csv);
+            // await fsPromises.writeFile(filePath, csv);
         }
 
         const endTime = performance.now();

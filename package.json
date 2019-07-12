@@ -1,12 +1,13 @@
 {
-    "name": "link-checker",
-    "version": "1.0.0",
+    "name": "dead-link-checker",
+    "version": "1.0.1",
     "description": "Goes through a website by domain and finds any broken links.",
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "scripts": {
         "start": "tsc && node ./dist/index-local.js",
-        "test": "mocha -r ts-node/register src/spec/**/*.spec.ts --exit"
+        "test": "mocha -r ts-node/register src/spec/**/*.spec.ts --exit",
+        "prepublish": "tsc && npm --no-git-tag-version version patch"
     },
     "keywords": [
         "puppeteer",

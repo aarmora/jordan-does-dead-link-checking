@@ -6,20 +6,24 @@ export async function checkLink(linkObject: ILinkObject, links: ILinkObject[], d
     let html: any;
     let newDomain: any;
     let newLinks: ILinkObject[] = [];
+    console.log('hit checkLinks', desiredIOThreads);
+
     try {
         const options: requestPromise.RequestPromiseOptions = {
             method: 'GET',
             resolveWithFullResponse: true,
-            timeout: 10000,
+            timeout: 100000,
             time: true,
             agentOptions: {
-                maxSockets: desiredIOThreads
+                maxSockets: desiredIOThreads,
+                keepAlive: false
             },
             headers: { 'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36 " }
         };
-        console.log('before', linkObject.link, new Date().getSeconds());
+        console.log('before', linkObject.link);
         const response: any = await requestPromise.get(linkObject.link, options);
-        console.log('after elapsed time****', linkObject.link, response.elapsedTime, new Date().getSeconds());
+        console.log('after elapsed time****', linkObject.link, response.request.agent, response.elapsedTime,
+            response.request.agent.freeSockets, response.request.agent.maxSockets);
         newDomain = `${response.request.uri.protocol}//${response.request.uri.host}`;
         linkObject.status = response.statusCode;
         html = response.body;
