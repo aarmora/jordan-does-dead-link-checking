@@ -30,7 +30,7 @@ describe('findDeadLinks()', () => {
 
         nock(domainToSend).get('/').reply(200);
 
-        await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
 
         expect(getLinksStub.callCount).to.equal(1);
 
@@ -47,7 +47,7 @@ describe('findDeadLinks()', () => {
 
         nock(domainToSend).get('/').reply(200);
 
-        await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
 
         expect(checkLinkStub.callCount).to.equal(2);
 
@@ -64,7 +64,7 @@ describe('findDeadLinks()', () => {
 
         nock(domainToSend).get('/').reply(200);
 
-        await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
 
         expect(checkLinkStub.callCount).to.equal(0);
 
@@ -81,7 +81,7 @@ describe('findDeadLinks()', () => {
         nock("https://heyBuddy.com").get('/').reply(404);
         nock("https://heyAnotherBuddy.com").get('/').reply(404);
 
-        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
 
         expect(links.length).to.equal(2);
 
@@ -98,7 +98,7 @@ describe('findDeadLinks()', () => {
         nock("https://heyBuddy.com").get('/').reply(404);
         nock("https://heyAnotherBuddy.com").get('/').reply(500);
 
-        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
 
         expect(links.length).to.equal(2);
 
@@ -115,7 +115,7 @@ describe('findDeadLinks()', () => {
         nock("https://heyBuddy.com").get('/').reply(200);
         nock("https://heyAnotherBuddy.com").get('/').reply(400);
 
-        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+        const links = await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
 
         expect(links.length).to.equal(1);
 
@@ -126,11 +126,10 @@ describe('findDeadLinks()', () => {
         nock(domainToSend).get('/').reply(500);
 
         try {
-            await findDeadLinks(domainToSend, desiredIOThreadsToSend);
+            await findDeadLinks(domainToSend, desiredIOThreadsToSend, []);
         }
-        catch (e) { 
+        catch (e) {
             expect(e).to.equal(`Error requesting base domain - ${domainToSend}, 500`);
         }
     });
 })
-

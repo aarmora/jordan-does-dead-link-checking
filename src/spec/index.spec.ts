@@ -1,6 +1,6 @@
 import { describe } from "mocha";
 import { expect } from 'chai';
-import { formatDomain } from "..";
+import { formatDomain } from "../index-local";
 
 
 describe('formatDomain()', () => {

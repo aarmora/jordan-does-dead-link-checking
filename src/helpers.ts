@@ -15,8 +15,6 @@ export function domainCheck(link: string, domain: string, newDomain: string) {
     return link.includes(domain) && newDomain.includes(domain);
 }
 
-
-
 export async function getLinks(html: any, domain: string, currentUrl: string, deep: boolean = false) {
     const $ = cheerio.load(html);
     const links: ILinkObject[] = [];
