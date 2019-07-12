@@ -41,7 +41,7 @@ export async function deadLinkChecker(desiredDomain: string, desiredIOThreads: a
         const endTime = performance.now();
         console.log('Completed findingDeadLinks. Total time -', (endTime - startTime));
 
-        return badLinks;
+        return endTime - startTime;
 
     }
     catch (e) {

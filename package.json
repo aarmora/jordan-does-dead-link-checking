@@ -1,6 +1,6 @@
 {
     "name": "dead-link-checker",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Goes through a website by domain and finds any broken links.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
